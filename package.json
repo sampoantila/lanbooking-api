@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node dist/app.js",
+    "start": "node app.js",
     "build": "npx babel . --out-dir dist/ --ignore ./dist,./node_modules,./.babelrc,./npm-debug.log --copy-files",
     "dev": "sendgrid.cmd && nodemon --delay 500ms --exec npx babel-node -- ./app.js"
   },
