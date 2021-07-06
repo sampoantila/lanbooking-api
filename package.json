@@ -1,0 +1,40 @@
+{
+  "name": "lanbooking-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node dist/app.js",
+    "build": "npx babel . --out-dir dist/ --ignore ./dist,./node_modules,./.babelrc,./npm-debug.log --copy-files",
+    "dev": "sendgrid.cmd && nodemon --delay 500ms --exec npx babel-node -- ./app.js"
+  },
+  "description": "LanBookingAPI",
+  "author": {
+    "name": "DataCodex Oy"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@sendgrid/client": "^7.4.3",
+    "@sendgrid/mail": "^7.4.5",
+    "async": "^3.2.0",
+    "body-parser": "^1.19.0",
+    "cookie-parser": "^1.4.5",
+    "debug": "^4.3.2",
+    "express": "^4.17.1",
+    "http-errors": "^1.8.0",
+    "moment": "^2.29.1",
+    "morgan": "^1.10.0",
+    "pug": "^3.0.2",
+    "tedious": "^11.0.9",
+    "uuid": "^8.3.2"
+  },
+  "engines": {
+    "node": "^14.16.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.14.5",
+    "@babel/core": "^7.14.6",
+    "@babel/node": "^7.14.7",
+    "@babel/preset-env": "^7.14.7",
+    "rimraf": "^3.0.2"
+  }
+}
