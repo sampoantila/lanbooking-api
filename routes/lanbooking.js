@@ -1,4 +1,5 @@
 import express from 'express';
+import config from '../config/config';
 import service from '../services/bookingService';
 
 var router = express.Router();
@@ -67,6 +68,21 @@ router
         }
         else {
             sendFailure('invalid code', res);
+        }
+    })
+    .put('/invite/:code', (req, res) => {
+        if (req.params.code === config.INVITE_SECRET) {
+            service.sendEmails((data) => {
+                if (data === null) {
+                    sendFailure('error in query', res);
+                }
+                else {
+                    res.json(data);
+                }
+            });
+        }
+        else {
+            sendFailure('unauthorized', res);
         }
     });
 
