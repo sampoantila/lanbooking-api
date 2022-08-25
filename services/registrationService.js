@@ -91,7 +91,7 @@ class RegistrationService {
                 console.log(connErr)
             }
             else {
-                var request = new Request("SELECT * FROM [Lanregistration] WHERE Email = @email",
+                var request = new Request("SELECT * FROM [Lanregistration] WHERE Email = @email AND History IS NULL",
                         (err, rowCount) => {
                             if (err) {
                                 console.log(err);
