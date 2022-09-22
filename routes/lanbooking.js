@@ -2,7 +2,7 @@ import express from 'express';
 import config from '../config/config';
 import service from '../services/bookingService';
 
-var router = express.Router();
+let router = express.Router();
 
 function sendFailure(msg, res) {
     res.status(400).send({
