@@ -48,6 +48,16 @@ router
         ];
         res.json(diets);
     })
+    .get('/registeredCount', (req, res) => {
+        registrationService.count((data) => {
+            if (data === null) {
+                sendFailure('no data', res);
+            }
+            else {
+                res.json(data);
+            }
+        });
+    })
     .post('/', (req, res) => {
         if (req.body.email) {
             registrationService.isRegistered(req.body.email, (isReg) => {

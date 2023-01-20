@@ -144,6 +144,39 @@ class RegistrationService {
 
         connection.connect();
     }
+
+    count(callback) {
+        var connection = azureSqlConnection.connect();
+
+        connection.on('connect', (connErr) => {
+            if (connErr) {
+                console.log(connErr)
+            }
+            else {
+                var request = new Request("SELECT COUNT(*) FROM [Lanregistration] WHERE History IS NULL",
+                        (err, rowCount, rows) => {
+                            if (err) {
+                                console.log(err);
+                            }
+                            console.log("rowcount: " + rowCount);
+                            if (rowCount === 0) {
+                                callback([]);
+                            }
+                            else {
+                                callback(rows.map(row => {
+                                        return row[0].value;
+                                    }
+                                ));
+                            }
+                        });
+
+                connection.execSql(request);
+            }
+        });
+
+        connection.connect();
+    }
+
 }
 
 export default new RegistrationService();
