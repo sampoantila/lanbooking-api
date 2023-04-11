@@ -65,5 +65,5 @@ stages:
               appType: webAppLinux
               WebAppName: $(webAppName)
               packageForLinux: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-              RuntimeStack: 'NODE|14-lts'
+              RuntimeStack: 'NODE|18-lts'
               StartupCommand: 'npm start'
