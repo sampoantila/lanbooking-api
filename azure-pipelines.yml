@@ -5,12 +5,6 @@ trigger:
 
 variables:
 
-  # Azure Resource Manager connection created during pipeline creation
-  azureSubscription: 'dcx-aslan-connection'
-
-  # Web app name
-  webAppName: 'lanbooking-api'
-  
   # Environment name
   environmentName: 'lanbooking-api'
 
@@ -57,13 +51,14 @@ stages:
     strategy:
       runOnce:
         deploy:
-          steps:            
+          steps:
           - task: AzureRmWebAppDeployment@4
             displayName: 'Azure App Service Deploy: $(webAppName)'
             inputs:
-              azureSubscription: $(azureSubscription)
-              appType: webAppLinux
-              WebAppName: $(webAppName)
+              ConnectionType: 'AzureRM'
+              azureSubscription: 'DataCodex Azure DEV(ca02ea0e-1ada-4a04-9a78-de7557a50e5c)'
+              appType: 'webAppLinux'
+              WebAppName: 'lanbooking-api'
               packageForLinux: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
               RuntimeStack: 'NODE|18-lts'
               StartupCommand: 'npm start'
