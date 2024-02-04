@@ -9,6 +9,7 @@ import http from 'http';
 import indexRouter from './routes/index';
 import lanbookingRouter from './routes/lanbooking';
 import lanregistrationRouter from './routes/lanregistration';
+import lanFeedbackRouter from './routes/lanfeedback';
 
 let app = express();
 
@@ -34,6 +35,7 @@ app.use(function (req, res, next) {
 app.use('/', indexRouter);
 app.use('/api/v1/lanbooking', lanbookingRouter);
 app.use('/api/v1/lanregistration', lanregistrationRouter);
+app.use('/api/v1/lanfeedback', lanFeedbackRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
