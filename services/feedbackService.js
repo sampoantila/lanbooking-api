@@ -34,6 +34,7 @@ class FeedbackService {
         request.addParameter('tournaments', TYPES.Int, model.tournaments);
         request.addParameter('atmosphere', TYPES.Int, model.atmosphere);
         request.addParameter('comments', TYPES.NVarChar, model.comments);
+        request.addParameter('created', TYPES.DateTime2, new Date());
 
         request.on('done', rowCount => {
           callback(true);
