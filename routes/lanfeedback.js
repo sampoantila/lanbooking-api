@@ -15,7 +15,7 @@ router.post('/', (req, res) => {
     if (data === null) {
       sendFailure('access denied', res);
     } else {
-      res.json({
+      res.status(201).json({
         success: 'true',
         message: 'registration stored',
       });

@@ -12,7 +12,7 @@ class FeedbackService {
       } else {
         // Read all rows from table
         const request = new Request(
-          'INSERT [Lanfeedback] (overall,organizing,food,tournaments,atmosphere,comments) VALUES (@overall,@organizing,@food,@tournaments,@atmosphere,@comments)',
+          'INSERT [Lanfeedback] (overall,organizing,food,tournaments,atmosphere,comments,created) VALUES (@overall,@organizing,@food,@tournaments,@atmosphere,@comments,@created)',
           (err, rowCount) => {
             if (err) {
               console.error('request error:');
@@ -34,7 +34,7 @@ class FeedbackService {
         request.addParameter('tournaments', TYPES.Int, model.tournaments);
         request.addParameter('atmosphere', TYPES.Int, model.atmosphere);
         request.addParameter('comments', TYPES.NVarChar, model.comments);
-        request.addParameter('created', TYPES.DateTime2, new Date());
+        request.addParameter('created', TYPES.DateTime, new Date());
 
         request.on('done', rowCount => {
           callback(true);
