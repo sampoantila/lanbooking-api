@@ -5,13 +5,13 @@ import config from '../config/config';
 
 class BookingService {
   query(email, code, callback) {
-    var connection = azureSqlConnection.connect();
+    const connection = azureSqlConnection.connect();
 
     connection.on('connect', connErr => {
       if (connErr) {
         console.log(connErr);
       } else {
-        var request = new Request(
+        const request = new Request(
           'SELECT Location FROM [Lanbooking] WHERE Email = @email AND Code = @code',
           (err, rowCount, rows) => {
             if (err) {
@@ -42,7 +42,7 @@ class BookingService {
   }
 
   store(email, code, location, callback) {
-    var connection = azureSqlConnection.connect();
+    const connection = azureSqlConnection.connect();
 
     // Attempt to connect and execute queries if connection goes through
     connection.on('connect', connErr => {
@@ -50,7 +50,7 @@ class BookingService {
         console.log(connErr);
       } else {
         // Read all rows from table
-        var request = new Request(
+        const request = new Request(
           'UPDATE [Lanbooking] SET Location = @location WHERE Email = @email AND Code = @code',
           (err, rowCount) => {
             if (err) {
@@ -88,13 +88,13 @@ class BookingService {
   }
 
   isBooked(location, callback) {
-    var connection = azureSqlConnection.connect();
+    const connection = azureSqlConnection.connect();
 
     connection.on('connect', connErr => {
       if (connErr) {
         console.log(connErr);
       } else {
-        var request = new Request(
+        const request = new Request(
           'SELECT * FROM [Lanbooking] WHERE Location = @location',
           (err, rowCount) => {
             if (err) {
@@ -118,7 +118,7 @@ class BookingService {
   }
 
   allbooked(callback) {
-    var connection = azureSqlConnection.connect();
+    const connection = azureSqlConnection.connect();
 
     // Attempt to connect and execute queries if connection goes through
     connection.on('connect', connErr => {
@@ -126,7 +126,7 @@ class BookingService {
         console.log(connErr);
       } else {
         // Read all rows from table
-        var request = new Request(
+        const request = new Request(
           'SELECT Location FROM [Lanbooking] WHERE Location IS NOT NULL',
           (err, rowCount, rows) => {
             if (err) {
@@ -152,14 +152,14 @@ class BookingService {
   }
 
   sendEmails(callback) {
-    var connection = azureSqlConnection.connect();
+    const connection = azureSqlConnection.connect();
 
     connection.on('connect', connErr => {
       if (connErr) {
         console.log(connErr);
       } else {
         // Read all rows from table send only for those who has note yet registered
-        var request = new Request(
+        const request = new Request(
           'SELECT Email FROM [Lanbooking] WHERE InvitationSent = 0; UPDATE [Lanbooking] SET InvitationSent = 1 WHERE InvitationSent = 0;',
           (err, rowCount, rows) => {
             if (err) {
@@ -174,7 +174,7 @@ class BookingService {
             }
             connection.close();
 
-            var emails = rows.map(row => row[0].value);
+            const emails = rows.map(row => row[0].value);
             //callback(rows.map(row => row[0].value));
 
             this.sendMail(this.createInvitationMessage(emails), callback);
@@ -189,8 +189,8 @@ class BookingService {
   }
 
   createAccount(email, callback) {
-    var connection = azureSqlConnection.connect();
-    var code = `aslan${this.makeCode()}`;
+    const connection = azureSqlConnection.connect();
+    const code = `aslan${this.makeCode()}`;
 
     // Attempt to connect and execute queries if connection goes through
     connection.on('connect', connErr => {
@@ -198,7 +198,7 @@ class BookingService {
         console.error(connErr);
       } else {
         // Is already registered?
-        var request = new Request(
+        const request = new Request(
           'SELECT * FROM [Lanbooking] WHERE Email = @email',
           (err, rowCount) => {
             if (err) {
@@ -230,7 +230,7 @@ class BookingService {
 
   createNewAccountWithCode(connection, email, code, callback) {
     // Create account all rows from table send only for those who has note yet registered
-    var request = new Request(
+    const request = new Request(
       'INSERT INTO [Lanbooking] (Email, Code) VALUES (@email, @code)',
       (err, rowCount) => {
         if (err) {
@@ -259,7 +259,7 @@ class BookingService {
 
   updateAccountWithCode(connection, email, code, callback) {
     // Update account code and send email
-    var request = new Request(
+    const request = new Request(
       'UPDATE [Lanbooking] SET Code = @code WHERE Email = @email',
       (err, rowCount) => {
         if (err) {
@@ -304,7 +304,7 @@ class BookingService {
       from: 'aslan@aslan.fi',
       templateId: config.SG_INVITE_TEMPLATE_ID,
       dynamic_template_data: {
-        date: '19.-21.10.2023',
+        date: '22.-24.2.2024',
       },
     };
   }
@@ -332,10 +332,10 @@ class BookingService {
   }
 
   makeCode() {
-    var text = '';
-    var possible = '123456789';
+    let text = '';
+    const possible = '123456789';
 
-    for (var i = 0; i < 5; i++)
+    for (let i = 0; i < 5; i++)
       text += possible.charAt(Math.floor(Math.random() * possible.length));
 
     return text;
