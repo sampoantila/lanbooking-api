@@ -2,6 +2,31 @@ import { Request, TYPES } from 'tedious';
 import azureSqlConnection from '../utils/azureSqlConnection';
 
 class TodoService {
+  getTodos(callback) {
+    const connection = azureSqlConnection.connect();
+
+    connection.on('connect', connErr => {
+      if (connErr) {
+        console.log(connErr);
+      } else {
+        const request = new Request(
+          'SELECT * FROM [Lantodo]',
+          (err, rowCount, rows) => {
+            if (err) {
+              console.log(err);
+            } else {
+              callback(rows);
+            }
+          }
+        );
+
+        connection.execSql(request);
+      }
+    });
+
+    connection.connect();
+  }
+
   store(model, callback) {
     const connection = azureSqlConnection.connect();
 
