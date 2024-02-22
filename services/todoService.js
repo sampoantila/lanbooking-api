@@ -9,13 +9,27 @@ class TodoService {
       if (connErr) {
         console.log(connErr);
       } else {
-        const request = new Request(
-          'SELECT * FROM [Lantodo]',
+        var request = new Request(
+          'SELECT id, task, person, doing, done, created FROM [Lantodo]',
           (err, rowCount, rows) => {
             if (err) {
               console.log(err);
+            }
+            if (rowCount === 0) {
+              callback([]);
             } else {
-              callback(rows);
+              callback(
+                rows.map(row => {
+                  return {
+                    [row[0].metadata.colName]: row[0].value,
+                    [row[1].metadata.colName]: row[1].value,
+                    [row[2].metadata.colName]: row[2].value,
+                    [row[3].metadata.colName]: row[3].value,
+                    [row[4].metadata.colName]: row[4].value,
+                    [row[5].metadata.colName]: row[5].value,
+                  };
+                })
+              );
             }
           }
         );
@@ -53,10 +67,10 @@ class TodoService {
           }
         );
 
-        request.addParameter('task', TYPES.Int, model.overall);
-        request.addParameter('person', TYPES.Int, model.organizing);
-        request.addParameter('doing', TYPES.Int, model.food);
-        request.addParameter('done', TYPES.Int, model.tournaments);
+        request.addParameter('task', TYPES.NVarChar, model.task);
+        request.addParameter('person', TYPES.NVarChar, model.person);
+        request.addParameter('doing', TYPES.Int, model.doing);
+        request.addParameter('done', TYPES.Int, model.done);
         request.addParameter('created', TYPES.DateTime, new Date());
 
         request.on('done', rowCount => {
