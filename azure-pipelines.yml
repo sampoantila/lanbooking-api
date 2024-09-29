@@ -60,5 +60,4 @@ stages:
               appType: 'webAppLinux'
               WebAppName: 'lanbooking-api'
               packageForLinux: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-              RuntimeStack: 'NODE|18-lts'
               StartupCommand: 'npm start'
