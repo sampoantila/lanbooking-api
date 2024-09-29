@@ -39,6 +39,7 @@ class BookingService {
     });
 
     connection.connect();
+    connection.close();
   }
 
   store(email, code, location, callback) {
@@ -85,6 +86,7 @@ class BookingService {
     });
 
     connection.connect();
+    connection.close();
   }
 
   isBooked(location, callback) {
@@ -115,6 +117,7 @@ class BookingService {
     });
 
     connection.connect();
+    connection.close();
   }
 
   allbooked(callback) {
@@ -149,6 +152,7 @@ class BookingService {
     });
 
     connection.connect();
+    connection.close();
   }
 
   sendEmails(callback) {
@@ -186,6 +190,7 @@ class BookingService {
     });
 
     connection.connect();
+    connection.close();
   }
 
   createAccount(email, callback) {
@@ -226,6 +231,7 @@ class BookingService {
     });
 
     connection.connect();
+    connection.close();
   }
 
   createNewAccountWithCode(connection, email, code, callback) {

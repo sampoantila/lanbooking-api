@@ -39,6 +39,7 @@ class TodoService {
     });
 
     connection.connect();
+    connection.close();
   }
 
   store(model, callback) {
@@ -82,6 +83,7 @@ class TodoService {
     });
 
     connection.connect();
+    connection.close();
   }
 }
 

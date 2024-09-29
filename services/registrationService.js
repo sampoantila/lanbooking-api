@@ -134,6 +134,7 @@ class RegistrationService {
     });
 
     connection.connect();
+    connection.close();
   }
 
   isRegistered(email, callback) {
@@ -161,6 +162,7 @@ class RegistrationService {
     });
 
     connection.connect();
+    connection.close();
   }
 
   tournaments(callback) {
@@ -198,6 +200,7 @@ class RegistrationService {
     });
 
     connection.connect();
+    connection.close();
   }
 
   count(callback) {
@@ -231,6 +234,7 @@ class RegistrationService {
     });
 
     connection.connect();
+    connection.close();
   }
 }
 

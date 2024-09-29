@@ -45,6 +45,7 @@ class FeedbackService {
     });
 
     connection.connect();
+    connection.close();
   }
 }
 
