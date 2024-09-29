@@ -304,7 +304,7 @@ class BookingService {
       from: 'aslan@aslan.fi',
       templateId: config.SG_INVITE_TEMPLATE_ID,
       dynamic_template_data: {
-        date: '22.-24.2.2024',
+        date: '17.-19.10.2024',
       },
     };
   }
