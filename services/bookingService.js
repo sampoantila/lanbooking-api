@@ -1,7 +1,7 @@
 import { Request, TYPES } from 'tedious';
 import sendgrid from '@sendgrid/mail';
-import azureSqlConnection from '../utils/azureSqlConnection';
-import config from '../config/config';
+import azureSqlConnection from '../utils/azureSqlConnection.js';
+import config from '../config/config.js';
 
 class BookingService {
   query(email, code, callback) {

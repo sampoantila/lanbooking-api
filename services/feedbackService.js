@@ -1,5 +1,5 @@
 import { Request, TYPES } from 'tedious';
-import azureSqlConnection from '../utils/azureSqlConnection';
+import azureSqlConnection from '../utils/azureSqlConnection.js';
 
 class FeedbackService {
   store(model, callback) {

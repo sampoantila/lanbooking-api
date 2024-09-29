@@ -1,6 +1,6 @@
 import express from 'express';
-import registrationService from '../services/registrationService';
-import bookingService from '../services/bookingService';
+import registrationService from '../services/registrationService.js';
+import bookingService from '../services/bookingService.js';
 
 const router = express.Router();
 
