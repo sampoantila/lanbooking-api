@@ -1,3 +1,8 @@
+import dotenv from 'dotenv';
+
+// Lataa .env tiedosto
+dotenv.config();
+
 const dev = {
   DB_HOST: process.env.DB_HOST,
   DB_NAME: process.env.DB_NAME,

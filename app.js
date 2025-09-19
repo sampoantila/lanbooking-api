@@ -1,4 +1,5 @@
-﻿import debug from 'debug';
+﻿import dotenv from 'dotenv';
+import debug from 'debug';
 import express from 'express';
 import path from 'path';
 import logger from 'morgan';
@@ -6,6 +7,9 @@ import cookieParser from 'cookie-parser';
 import createError from 'http-errors';
 import http from 'http';
 import { fileURLToPath } from 'url';
+
+// Lataa .env tiedosto heti alussa
+dotenv.config();
 
 import indexRouter from './routes/index.js';
 import lanbookingRouter from './routes/lanbooking.js';
