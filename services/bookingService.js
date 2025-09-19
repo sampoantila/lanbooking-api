@@ -310,7 +310,7 @@ class BookingService {
       from: 'aslan@aslan.fi',
       templateId: config.SG_INVITE_TEMPLATE_ID,
       dynamic_template_data: {
-        date: '16.-17.10.2025',
+        date: '16.-18.10.2025',
       },
     };
   }
