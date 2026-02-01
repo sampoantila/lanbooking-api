@@ -28,7 +28,7 @@ class BookingService {
                 ? callback('-')
                 : callback(rows[0][0].value);
             }
-          }
+          },
         );
 
         request.addParameter('email', TYPES.NVarChar, email);
@@ -66,7 +66,7 @@ class BookingService {
             } else {
               callback(rowCount);
             }
-          }
+          },
         );
 
         request.addParameter('email', TYPES.NVarChar, email);
@@ -107,7 +107,7 @@ class BookingService {
             }
             console.log('rowcount: ' + rowCount);
             callback({ booked: rowCount > 0 });
-          }
+          },
         );
 
         request.addParameter('location', TYPES.NVarChar, location);
@@ -144,7 +144,7 @@ class BookingService {
             } else {
               callback(rows.map(row => row[0].value));
             }
-          }
+          },
         );
 
         connection.execSql(request);
@@ -182,7 +182,7 @@ class BookingService {
             //callback(rows.map(row => row[0].value));
 
             this.sendMail(this.createInvitationMessage(emails), callback);
-          }
+          },
         );
 
         connection.execSql(request);
@@ -222,7 +222,7 @@ class BookingService {
             // not yet registered
             console.log('create account: ' + email);
             this.createNewAccountWithCode(connection, email, code, callback);
-          }
+          },
         );
 
         request.addParameter('email', TYPES.NVarChar, email);
@@ -254,7 +254,7 @@ class BookingService {
 
         console.log('send email to ' + email);
         this.sendMail(this.createBookingMessage(email, code), callback);
-      }
+      },
     );
 
     request.addParameter('code', TYPES.NVarChar, code);
@@ -283,7 +283,7 @@ class BookingService {
 
         console.log('send email to ' + email);
         this.sendMail(this.createBookingMessage(email, code), callback);
-      }
+      },
     );
 
     request.addParameter('code', TYPES.NVarChar, code);
@@ -310,7 +310,7 @@ class BookingService {
       from: 'aslan@aslan.fi',
       templateId: config.SG_INVITE_TEMPLATE_ID,
       dynamic_template_data: {
-        date: '16.-18.10.2025',
+        date: '19.-21.2.2026',
       },
     };
   }
