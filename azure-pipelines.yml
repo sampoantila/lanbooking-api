@@ -58,7 +58,7 @@ stages:
                   displayName: 'Azure App Service Deploy: $(webAppName)'
                   inputs:
                     ConnectionType: 'AzureRM'
-                    azureSubscription: 'DataCodex Azure DEV(ca02ea0e-1ada-4a04-9a78-de7557a50e5c)'
+                    azureSubscription: 'aslanConnection'
                     appType: 'webAppLinux'
                     WebAppName: 'lanbooking-api'
                     packageForLinux: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
