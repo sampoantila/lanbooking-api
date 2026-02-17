@@ -12,6 +12,7 @@ const dev = {
   SG_BOOKING_TEMPLATE_ID: process.env.SG_BOOKING_TEMPLATE_ID,
   SG_INVITE_TEMPLATE_ID: process.env.SG_INVITE_TEMPLATE_ID,
   INVITE_SECRET: process.env.INVITE_SECRET,
+  ADMIN_SECRET: process.env.ADMIN_SECRET,
 };
 
 const prod = {
@@ -23,6 +24,7 @@ const prod = {
   SG_BOOKING_TEMPLATE_ID: process.env.SG_BOOKING_TEMPLATE_ID,
   SG_INVITE_TEMPLATE_ID: process.env.SG_INVITE_TEMPLATE_ID,
   INVITE_SECRET: process.env.INVITE_SECRET,
+  ADMIN_SECRET: process.env.ADMIN_SECRET,
 };
 
 const config = process.env.NODE_ENV == 'production' ? prod : dev;

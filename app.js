@@ -1,4 +1,4 @@
-﻿import dotenv from 'dotenv';
+import dotenv from 'dotenv';
 import debug from 'debug';
 import express from 'express';
 import path from 'path';
@@ -16,6 +16,7 @@ import lanbookingRouter from './routes/lanbooking.js';
 import lanregistrationRouter from './routes/lanregistration.js';
 import lanFeedbackRouter from './routes/lanfeedback.js';
 import lanTodoRouter from './routes/lantodo.js';
+import adminRouter from './routes/admin.js';
 
 let app = express();
 
@@ -38,6 +39,14 @@ app.use(function (req, res, next) {
     'Access-Control-Allow-Headers',
     'Origin, X-Requested-With, Content-Type, Accept'
   );
+  res.header(
+    'Access-Control-Allow-Methods',
+    'GET, POST, PUT, PATCH, DELETE, OPTIONS'
+  );
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204);
+    return;
+  }
   next();
 });
 
@@ -46,6 +55,7 @@ app.use('/api/v1/lanbooking', lanbookingRouter);
 app.use('/api/v1/lanregistration', lanregistrationRouter);
 app.use('/api/v1/lanfeedback', lanFeedbackRouter);
 app.use('/api/v1/lantodo', lanTodoRouter);
+app.use('/api/v1/admin', adminRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
