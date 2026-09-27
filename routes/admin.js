@@ -11,6 +11,10 @@ function sendFailure(msg, res, status = 400) {
   });
 }
 
+function hasError(data) {
+  return data && typeof data === 'object' && data.error != null;
+}
+
 function requireAdminCode(req, res, next) {
   const code = req.params.code;
   if (!code || code !== config.ADMIN_SECRET) {
@@ -22,7 +26,9 @@ function requireAdminCode(req, res, next) {
 
 router.get('/:code', requireAdminCode, (req, res) => {
   adminService.getRegistrationsWithLocation(data => {
-    if (data === null) {
+    if (hasError(data)) {
+      sendFailure(data.error, res, 500);
+    } else if (data === null) {
       sendFailure('error in query', res, 500);
     } else {
       res.json(data);
@@ -43,22 +49,17 @@ router.put('/:id/:code', requireAdminCode, (req, res) => {
     return;
   }
 
-  adminService.updateArrival(
-    id,
-    arrived,
-    food_paid,
-    result => {
-      if (result && result.error) {
-        if (result.error === 'not found') {
-          sendFailure('registration not found', res, 404);
-        } else {
-          sendFailure(result.error, res, 500);
-        }
+  adminService.updateArrival(id, arrived, food_paid, result => {
+    if (result && result.error) {
+      if (result.error === 'not found') {
+        sendFailure('registration not found', res, 404);
       } else {
-        res.json({ success: 'true', message: 'updated' });
+        sendFailure(result.error, res, 500);
       }
+    } else {
+      res.json({ success: 'true', message: 'updated' });
     }
-  );
+  });
 });
 
 export default router;

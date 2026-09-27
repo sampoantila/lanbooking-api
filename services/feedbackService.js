@@ -1,51 +1,36 @@
-import { Request, TYPES } from 'tedious';
-import azureSqlConnection from '../utils/azureSqlConnection.js';
+import { TYPES } from 'tedious';
+import { withConnection, execSql } from '../utils/db.js';
 
 class FeedbackService {
   store(model, callback) {
-    const connection = azureSqlConnection.connect();
+    withConnection(async connection => {
+      const { rowCount } = await execSql(
+        connection,
+        'INSERT [Lanfeedback] (overall,organizing,food,tournaments,atmosphere,comments,created) VALUES (@overall,@organizing,@food,@tournaments,@atmosphere,@comments,@created)',
+        request => {
+          request.addParameter('overall', TYPES.Int, model.overall);
+          request.addParameter('organizing', TYPES.Int, model.organizing);
+          request.addParameter('food', TYPES.Int, model.food);
+          request.addParameter('tournaments', TYPES.Int, model.tournaments);
+          request.addParameter('atmosphere', TYPES.Int, model.atmosphere);
+          request.addParameter('comments', TYPES.NVarChar, model.comments);
+          request.addParameter('created', TYPES.DateTime, new Date());
+        }
+      );
 
-    // Attempt to connect and execute queries if connection goes through
-    connection.on('connect', connErr => {
-      if (connErr) {
-        console.log(connErr);
-      } else {
-        // Read all rows from table
-        const request = new Request(
-          'INSERT [Lanfeedback] (overall,organizing,food,tournaments,atmosphere,comments,created) VALUES (@overall,@organizing,@food,@tournaments,@atmosphere,@comments,@created)',
-          (err, rowCount) => {
-            if (err) {
-              console.error('request error:');
-              console.log(err);
-              callback({ error: 'request error' });
-              return;
-            }
-            if (rowCount === 0) {
-              callback({ error: 'no result' });
-            } else {
-              callback(rowCount);
-            }
-          }
-        );
-
-        request.addParameter('overall', TYPES.Int, model.overall);
-        request.addParameter('organizing', TYPES.Int, model.organizing);
-        request.addParameter('food', TYPES.Int, model.food);
-        request.addParameter('tournaments', TYPES.Int, model.tournaments);
-        request.addParameter('atmosphere', TYPES.Int, model.atmosphere);
-        request.addParameter('comments', TYPES.NVarChar, model.comments);
-        request.addParameter('created', TYPES.DateTime, new Date());
-
-        request.on('done', rowCount => {
-          callback(true);
-        });
-
-        connection.execSql(request);
+      if (rowCount === 0) {
+        const error = new Error('no result');
+        error.code = 'no result';
+        throw error;
       }
-    });
-
-    connection.connect();
-    connection.close();
+      return rowCount;
+    })
+      .then(result => callback(result))
+      .catch(err => {
+        console.error('request error:');
+        console.error(err);
+        callback({ error: err.code === 'no result' ? 'no result' : 'request error' });
+      });
   }
 }
 

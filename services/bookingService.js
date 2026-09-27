@@ -1,295 +1,192 @@
-import { Request, TYPES } from 'tedious';
+import { TYPES } from 'tedious';
 import sendgrid from '@sendgrid/mail';
-import azureSqlConnection from '../utils/azureSqlConnection.js';
 import config from '../config/config.js';
+import { withConnection, execSql } from '../utils/db.js';
 
 class BookingService {
   query(email, code, callback) {
-    const connection = azureSqlConnection.connect();
+    withConnection(async connection => {
+      const { rowCount, rows } = await execSql(
+        connection,
+        'SELECT Location FROM [Lanbooking] WHERE Email = @email AND Code = @code',
+        request => {
+          request.addParameter('email', TYPES.NVarChar, email);
+          request.addParameter('code', TYPES.NVarChar, code);
+        }
+      );
 
-    connection.on('connect', connErr => {
-      if (connErr) {
-        console.log(connErr);
-      } else {
-        const request = new Request(
-          'SELECT Location FROM [Lanbooking] WHERE Email = @email AND Code = @code',
-          (err, rowCount, rows) => {
-            if (err) {
-              console.error('request error:');
-              console.log(err);
-              callback({ error: 'request error' });
-              return;
-            }
-
-            if (rowCount === 0) {
-              callback(null);
-            } else {
-              rows[0][0].value == null
-                ? callback('-')
-                : callback(rows[0][0].value);
-            }
-          },
-        );
-
-        request.addParameter('email', TYPES.NVarChar, email);
-        request.addParameter('code', TYPES.NVarChar, code);
-
-        connection.execSql(request);
+      if (rowCount === 0) {
+        return null;
       }
-    });
 
-    connection.connect();
-    connection.close();
+      return rows[0][0].value == null ? '-' : rows[0][0].value;
+    })
+      .then(result => callback(result))
+      .catch(err => {
+        console.error('request error:');
+        console.error(err);
+        callback({ error: 'request error' });
+      });
   }
 
   store(email, code, location, callback) {
-    const connection = azureSqlConnection.connect();
+    withConnection(async connection => {
+      const { rowCount } = await execSql(
+        connection,
+        'UPDATE [Lanbooking] SET Location = @location WHERE Email = @email AND Code = @code',
+        request => {
+          request.addParameter('email', TYPES.NVarChar, email);
+          request.addParameter('code', TYPES.NVarChar, code);
+          request.addParameter('location', TYPES.NVarChar, location);
+        }
+      );
 
-    // Attempt to connect and execute queries if connection goes through
-    connection.on('connect', connErr => {
-      if (connErr) {
-        console.log(connErr);
-      } else {
-        // Read all rows from table
-        const request = new Request(
-          'UPDATE [Lanbooking] SET Location = @location WHERE Email = @email AND Code = @code',
-          (err, rowCount) => {
-            if (err) {
-              console.error('request error:');
-              console.log(err);
-              callback({ error: 'request error' });
-              return;
-            }
-            console.log('rowcount r: ' + rowCount);
-            if (rowCount === 0) {
-              callback({ error: 'no result' });
-            } else {
-              callback(rowCount);
-            }
-          },
-        );
-
-        request.addParameter('email', TYPES.NVarChar, email);
-        request.addParameter('code', TYPES.NVarChar, code);
-        request.addParameter('location', TYPES.NVarChar, location);
-
-        console.log(request);
-
-        request.on('done', rowCount => {
-          console.log('req on done called');
-          console.log('rowcount: ' + rowCount);
-          callback(rowCount);
-        });
-
-        connection.execSql(request);
+      console.log('rowcount r: ' + rowCount);
+      if (rowCount === 0) {
+        const error = new Error('no result');
+        error.code = 'no result';
+        throw error;
       }
-    });
-
-    connection.connect();
-    connection.close();
+      return rowCount;
+    })
+      .then(result => callback(result))
+      .catch(err => {
+        console.error('request error:');
+        console.error(err);
+        callback({ error: err.code === 'no result' ? 'no result' : 'request error' });
+      });
   }
 
   isBooked(location, callback) {
-    const connection = azureSqlConnection.connect();
+    withConnection(async connection => {
+      const { rowCount } = await execSql(
+        connection,
+        'SELECT * FROM [Lanbooking] WHERE Location = @location',
+        request => {
+          request.addParameter('location', TYPES.NVarChar, location);
+        }
+      );
 
-    connection.on('connect', connErr => {
-      if (connErr) {
-        console.log(connErr);
-      } else {
-        const request = new Request(
-          'SELECT * FROM [Lanbooking] WHERE Location = @location',
-          (err, rowCount) => {
-            if (err) {
-              console.error('request error:');
-              console.log(err);
-              callback({ error: 'request error' });
-              return;
-            }
-            console.log('rowcount: ' + rowCount);
-            callback({ booked: rowCount > 0 });
-          },
-        );
-
-        request.addParameter('location', TYPES.NVarChar, location);
-
-        connection.execSql(request);
-      }
-    });
-
-    connection.connect();
-    connection.close();
+      console.log('rowcount: ' + rowCount);
+      return { booked: rowCount > 0 };
+    })
+      .then(result => callback(result))
+      .catch(err => {
+        console.error('request error:');
+        console.error(err);
+        callback({ error: 'request error' });
+      });
   }
 
   allbooked(callback) {
-    const connection = azureSqlConnection.connect();
+    withConnection(async connection => {
+      const { rowCount, rows } = await execSql(
+        connection,
+        'SELECT Location FROM [Lanbooking] WHERE Location IS NOT NULL'
+      );
 
-    // Attempt to connect and execute queries if connection goes through
-    connection.on('connect', connErr => {
-      if (connErr) {
-        console.log(connErr);
-      } else {
-        // Read all rows from table
-        const request = new Request(
-          'SELECT Location FROM [Lanbooking] WHERE Location IS NOT NULL',
-          (err, rowCount, rows) => {
-            if (err) {
-              console.error('request error:');
-              console.log(err);
-              callback({ error: 'request error' });
-              return;
-            }
-
-            if (rowCount === 0) {
-              callback([]);
-            } else {
-              callback(rows.map(row => row[0].value));
-            }
-          },
-        );
-
-        connection.execSql(request);
+      if (rowCount === 0) {
+        return [];
       }
-    });
-
-    connection.connect();
-    connection.close();
+      return rows.map(row => row[0].value);
+    })
+      .then(result => callback(result))
+      .catch(err => {
+        console.error('request error:');
+        console.error(err);
+        callback({ error: 'request error' });
+      });
   }
 
   sendEmails(callback) {
-    const connection = azureSqlConnection.connect();
+    withConnection(async connection => {
+      const { rowCount, rows } = await execSql(
+        connection,
+        'SELECT Email FROM [Lanbooking] WHERE InvitationSent = 0; UPDATE [Lanbooking] SET InvitationSent = 1 WHERE InvitationSent = 0;'
+      );
 
-    connection.on('connect', connErr => {
-      if (connErr) {
-        console.log(connErr);
-      } else {
-        // Read all rows from table send only for those who has note yet registered
-        const request = new Request(
-          'SELECT Email FROM [Lanbooking] WHERE InvitationSent = 0; UPDATE [Lanbooking] SET InvitationSent = 1 WHERE InvitationSent = 0;',
-          (err, rowCount, rows) => {
-            if (err) {
-              console.error('request error:');
-              console.log(err);
-              callback({ error: 'request error' });
-              return;
-            }
-            if (rowCount === 0) {
-              callback({ error: 'No emails to sent' });
-              return;
-            }
-            connection.close();
-
-            const emails = rows.map(row => row[0].value);
-            //callback(rows.map(row => row[0].value));
-
-            this.sendMail(this.createInvitationMessage(emails), callback);
-          },
-        );
-
-        connection.execSql(request);
+      if (rowCount === 0) {
+        const error = new Error('No emails to sent');
+        error.code = 'No emails to sent';
+        throw error;
       }
-    });
 
-    connection.connect();
-    connection.close();
+      return rows.map(row => row[0].value);
+    })
+      .then(emails => {
+        this.sendMail(this.createInvitationMessage(emails), callback);
+      })
+      .catch(err => {
+        console.error('request error:');
+        console.error(err);
+        callback({
+          error: err.code === 'No emails to sent' ? 'No emails to sent' : 'request error',
+        });
+      });
   }
 
   createAccount(email, callback) {
-    const connection = azureSqlConnection.connect();
     const code = `aslan${this.makeCode()}`;
 
-    // Attempt to connect and execute queries if connection goes through
-    connection.on('connect', connErr => {
-      if (connErr) {
-        console.error(connErr);
-      } else {
-        // Is already registered?
-        const request = new Request(
-          'SELECT * FROM [Lanbooking] WHERE Email = @email',
-          (err, rowCount) => {
-            if (err) {
-              console.error('request error:');
-              console.error(err);
-              callback({ error: 'request error' });
-              return;
-            }
+    withConnection(async connection => {
+      const { rowCount } = await execSql(
+        connection,
+        'SELECT * FROM [Lanbooking] WHERE Email = @email',
+        request => {
+          request.addParameter('email', TYPES.NVarChar, email);
+        }
+      );
 
-            if (rowCount > 0) {
-              console.log('update account: ' + email);
-              this.updateAccountWithCode(connection, email, code, callback);
-              return;
-            }
-
-            // not yet registered
-            console.log('create account: ' + email);
-            this.createNewAccountWithCode(connection, email, code, callback);
-          },
+      if (rowCount > 0) {
+        console.log('update account: ' + email);
+        const { rowCount: updated } = await execSql(
+          connection,
+          'UPDATE [Lanbooking] SET Code = @code WHERE Email = @email',
+          request => {
+            request.addParameter('code', TYPES.NVarChar, code);
+            request.addParameter('email', TYPES.NVarChar, email);
+          }
         );
 
-        request.addParameter('email', TYPES.NVarChar, email);
-        connection.execSql(request);
+        if (updated === 0) {
+          const error = new Error('UPDATE failed');
+          error.code = 'UPDATE failed';
+          throw error;
+        }
+      } else {
+        console.log('create account: ' + email);
+        const { rowCount: inserted } = await execSql(
+          connection,
+          'INSERT INTO [Lanbooking] (Email, Code) VALUES (@email, @code)',
+          request => {
+            request.addParameter('code', TYPES.NVarChar, code);
+            request.addParameter('email', TYPES.NVarChar, email);
+          }
+        );
+
+        if (inserted === 0) {
+          const error = new Error('INSERT failed');
+          error.code = 'INSERT failed';
+          throw error;
+        }
       }
-    });
 
-    connection.connect();
-    connection.close();
-  }
-
-  createNewAccountWithCode(connection, email, code, callback) {
-    // Create account all rows from table send only for those who has note yet registered
-    const request = new Request(
-      'INSERT INTO [Lanbooking] (Email, Code) VALUES (@email, @code)',
-      (err, rowCount) => {
-        if (err) {
-          console.error('request error:');
-          console.error(err);
-          callback({ error: 'request error' });
-          return;
-        }
-        connection.close();
-
-        if (rowCount === 0) {
-          callback({ error: 'INSERT failed' });
-          return;
-        }
-
-        console.log('send email to ' + email);
-        this.sendMail(this.createBookingMessage(email, code), callback);
-      },
-    );
-
-    request.addParameter('code', TYPES.NVarChar, code);
-    request.addParameter('email', TYPES.NVarChar, email);
-
-    connection.execSql(request);
-  }
-
-  updateAccountWithCode(connection, email, code, callback) {
-    // Update account code and send email
-    const request = new Request(
-      'UPDATE [Lanbooking] SET Code = @code WHERE Email = @email',
-      (err, rowCount) => {
-        if (err) {
-          console.error('request error:');
-          console.error(err);
-          callback({ error: 'request error' });
-          return;
-        }
-        connection.close();
-
-        if (rowCount === 0) {
-          callback({ error: 'UPDATE failed' });
-          return;
-        }
-
-        console.log('send email to ' + email);
-        this.sendMail(this.createBookingMessage(email, code), callback);
-      },
-    );
-
-    request.addParameter('code', TYPES.NVarChar, code);
-    request.addParameter('email', TYPES.NVarChar, email);
-
-    connection.execSql(request);
+      return { email, code };
+    })
+      .then(({ email: accountEmail, code: accountCode }) => {
+        console.log('send email to ' + accountEmail);
+        this.sendMail(this.createBookingMessage(accountEmail, accountCode), callback);
+      })
+      .catch(err => {
+        console.error('request error:');
+        console.error(err);
+        callback({
+          error:
+            err.code === 'INSERT failed' || err.code === 'UPDATE failed'
+              ? err.code
+              : 'request error',
+        });
+      });
   }
 
   createBookingMessage(email, code) {
@@ -320,7 +217,7 @@ class BookingService {
 
     sendgrid
       .send(msg, true)
-      .then(result => {
+      .then(() => {
         console.log('sent');
         console.log(msg);
 

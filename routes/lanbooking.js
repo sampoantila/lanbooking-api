@@ -4,18 +4,24 @@ import service from '../services/bookingService.js';
 
 const router = express.Router();
 
-function sendFailure(msg, res) {
-  res.status(400).send({
+function sendFailure(msg, res, status = 400) {
+  res.status(status).send({
     success: 'false',
     message: msg,
   });
+}
+
+function hasError(data) {
+  return data && typeof data === 'object' && data.error != null;
 }
 
 router
   .get('/isbooked/:location', (req, res) => {
     if (req.params.location) {
       service.isBooked(req.params.location, data => {
-        if (data === null) {
+        if (hasError(data)) {
+          sendFailure(data.error, res, 500);
+        } else if (data === null) {
           sendFailure('error in query', res);
         } else {
           res.json(data);
@@ -28,7 +34,11 @@ router
   .get('/check', (req, res) => {
     if (req.query.email && req.query.code) {
       service.query(req.query.email, req.query.code, data => {
-        res.json(data);
+        if (hasError(data)) {
+          sendFailure(data.error, res, 500);
+        } else {
+          res.json(data);
+        }
       });
     } else {
       sendFailure('invalid email or code', res);
@@ -36,7 +46,9 @@ router
   })
   .get('/booked', (req, res) => {
     service.allbooked(data => {
-      if (data === null) {
+      if (hasError(data)) {
+        sendFailure(data.error, res, 500);
+      } else if (data === null) {
         sendFailure('no data', res);
       } else {
         res.json(data);
@@ -47,7 +59,9 @@ router
     console.log(req.body);
     if (req.body.email && req.body.code) {
       service.store(req.body.email, req.body.code, req.body.location, data => {
-        if (data === null) {
+        if (hasError(data)) {
+          sendFailure(data.error, res, 500);
+        } else if (data === null) {
           sendFailure('access denied', res);
         } else {
           console.log(data);
@@ -64,7 +78,9 @@ router
   .put('/invite/:code', (req, res) => {
     if (req.params.code === config.INVITE_SECRET) {
       service.sendEmails(data => {
-        if (data === null) {
+        if (hasError(data)) {
+          sendFailure(data.error, res, 500);
+        } else if (data === null) {
           sendFailure('error in query', res);
         } else {
           res.json(data);

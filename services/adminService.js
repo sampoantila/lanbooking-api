@@ -1,5 +1,5 @@
-import { Request, TYPES } from 'tedious';
-import azureSqlConnection from '../utils/azureSqlConnection.js';
+import { TYPES } from 'tedious';
+import { withConnection, execSql } from '../utils/db.js';
 
 function rowToObject(row) {
   return row.reduce((obj, col) => {
@@ -14,85 +14,64 @@ class AdminService {
    * joinilla lanbooking-sähköpostin kautta henkilön varattu paikka (location).
    */
   getRegistrationsWithLocation(callback) {
-    const connection = azureSqlConnection.connect();
-
-    connection.on('connect', connErr => {
-      if (connErr) {
-        console.error(connErr);
-        callback(null);
-        return;
-      }
-
-      const query = `SELECT r.*, b.[Location]
+    const query = `SELECT r.*, b.[Location]
         FROM [dbo].[Lanregistration] r
         LEFT JOIN [dbo].[Lanbooking] b ON r.[Email] = b.[Email]
         WHERE r.[History] IS NULL`;
 
-      const request = new Request(query, (err, rowCount, rows) => {
-        if (err) {
-          console.error(err);
-          callback(null);
-          return;
-        }
-        const result = rows ? rows.map(row => rowToObject(row)) : [];
-        callback(result);
+    withConnection(async connection => {
+      const { rows } = await execSql(connection, query);
+      return rows ? rows.map(row => rowToObject(row)) : [];
+    })
+      .then(result => callback(result))
+      .catch(err => {
+        console.error(err);
+        callback({ error: 'request error' });
       });
-
-      connection.execSql(request);
-    });
-
-    connection.connect();
-    connection.close();
   }
 
   /**
    * Päivittää lanregistration-rivin id:llä kentät Arrived ja Food_paid.
    */
   updateArrival(id, arrived, foodPaid, callback) {
-    const connection = azureSqlConnection.connect();
-
-    connection.on('connect', connErr => {
-      if (connErr) {
-        console.error(connErr);
-        callback({ error: 'connection error' });
-        return;
-      }
-
-      const request = new Request(
+    withConnection(async connection => {
+      const { rowCount } = await execSql(
+        connection,
         `UPDATE [dbo].[Lanregistration]
          SET [Arrived] = @arrived, [Food_paid] = @food_paid
          WHERE [Id] = @id`,
-        (err, rowCount) => {
-          if (err) {
-            console.error(err);
-            callback({ error: 'update error' });
-            return;
-          }
-          if (rowCount === 0) {
-            callback({ error: 'not found' });
-            return;
-          }
-          callback({ success: true });
+        request => {
+          request.addParameter('id', TYPES.Int, id);
+          request.addParameter(
+            'arrived',
+            TYPES.Int,
+            arrived === true || arrived === 1
+          );
+          request.addParameter(
+            'food_paid',
+            TYPES.Int,
+            foodPaid === true || foodPaid === 1
+          );
         }
       );
 
-      request.addParameter('id', TYPES.Int, id);
-      request.addParameter(
-        'arrived',
-        TYPES.Int,
-        arrived === true || arrived === 1
-      );
-      request.addParameter(
-        'food_paid',
-        TYPES.Int,
-        foodPaid === true || foodPaid === 1
-      );
+      if (rowCount === 0) {
+        const error = new Error('not found');
+        error.code = 'not found';
+        throw error;
+      }
 
-      connection.execSql(request);
-    });
-
-    connection.connect();
-    connection.close();
+      return { success: true };
+    })
+      .then(result => callback(result))
+      .catch(err => {
+        console.error(err);
+        if (err.code === 'not found') {
+          callback({ error: 'not found' });
+          return;
+        }
+        callback({ error: 'update error' });
+      });
   }
 }
 

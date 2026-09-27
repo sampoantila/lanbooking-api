@@ -4,18 +4,24 @@ import bookingService from '../services/bookingService.js';
 
 const router = express.Router();
 
-function sendFailure(msg, res) {
-  res.status(400).send({
+function sendFailure(msg, res, status = 400) {
+  res.status(status).send({
     success: 'false',
     message: msg,
   });
+}
+
+function hasError(data) {
+  return data && typeof data === 'object' && data.error != null;
 }
 
 router
   .get('/isregistered/:email', (req, res) => {
     if (req.params.email) {
       registrationService.isRegistered(req.params.email, data => {
-        if (data === null) {
+        if (hasError(data)) {
+          sendFailure(data.error, res, 500);
+        } else if (data === null) {
           sendFailure('error in query', res);
         } else {
           res.json(data);
@@ -27,7 +33,9 @@ router
   })
   .get('/tournaments', (req, res) => {
     registrationService.tournaments(data => {
-      if (data === null) {
+      if (hasError(data)) {
+        sendFailure(data.error, res, 500);
+      } else if (data === null) {
         sendFailure('no data', res);
       } else {
         res.json(data);
@@ -47,7 +55,9 @@ router
   })
   .get('/registeredCount', (req, res) => {
     registrationService.count(data => {
-      if (data === null) {
+      if (hasError(data)) {
+        sendFailure(data.error, res, 500);
+      } else if (data === null) {
         sendFailure('no data', res);
       } else {
         res.json(data);
@@ -57,11 +67,17 @@ router
   .post('/', (req, res) => {
     if (req.body.email) {
       registrationService.isRegistered(req.body.email, isReg => {
+        if (hasError(isReg)) {
+          sendFailure(isReg.error, res, 500);
+          return;
+        }
         if (isReg.registered === true) {
           sendFailure('already registered', res);
         } else {
           registrationService.register(req.body, data => {
-            if (data === null) {
+            if (hasError(data)) {
+              sendFailure(data.error, res, 500);
+            } else if (data === null) {
               sendFailure('access denied', res);
             } else {
               // send table booking email
@@ -69,7 +85,7 @@ router
                 if (createData.error != null) {
                   console.error('create account error');
                   console.log(createData.error);
-                  sendFailure(createData.error, res);
+                  sendFailure(createData.error, res, 500);
                 } else {
                   res.json({
                     success: 'true',

@@ -1,17 +1,9 @@
-import { Request, TYPES } from 'tedious';
-import azureSqlConnection from '../utils/azureSqlConnection.js';
+import { TYPES } from 'tedious';
+import { withConnection, execSql } from '../utils/db.js';
 
 class RegistrationService {
   register(model, callback) {
-    var connection = azureSqlConnection.connect();
-
-    // Attempt to connect and execute queries if connection goes through
-    connection.on('connect', connErr => {
-      if (connErr) {
-        console.log(connErr);
-      } else {
-        // Store registration
-        var query = `INSERT INTO [dbo].[Lanregistration]
+    const query = `INSERT INTO [dbo].[Lanregistration]
                                     ([Firstname],[Lastname],[Phone],[Email],[ParentName],[ParentPhone],
                                     [DevicePC],[DeviceConsole],[DeviceHanging],[DeviceOther],[DeviceOtherComment],
                                     [AttendingThu],[AttendingFri],
@@ -27,91 +19,40 @@ class RegistrationService {
                                     @food,@diet,@dietL,@dietG,@dietV,@dietOther,@dietOtherComment);
                             SELECT @@identity`;
 
-        var request = new Request(query, (err, rowCount, rows) => {
-          if (err) {
-            console.log(err);
-          }
-          // console.log("rowcount r: " + rowCount);
-          if (rowCount === 0) {
-            callback(null);
-          } else {
-            //console.log('New id: %d', rows[0][0].value)
-            callback(rowCount);
-          }
-        });
-
+    withConnection(async connection => {
+      const { rowCount } = await execSql(connection, query, request => {
         request.addParameter('firstname', TYPES.NVarChar, model.etunimi);
         request.addParameter('lastname', TYPES.NVarChar, model.sukunimi);
         request.addParameter('phone', TYPES.NVarChar, model.puhelin);
         request.addParameter('email', TYPES.NVarChar, model.email);
         request.addParameter('parentName', TYPES.NVarChar, model.huoltajaNimi);
-        request.addParameter(
-          'parentPhone',
-          TYPES.NVarChar,
-          model.huoltajaPuhelin
-        );
+        request.addParameter('parentPhone', TYPES.NVarChar, model.huoltajaPuhelin);
         request.addParameter('devicePC', TYPES.TinyInt, model.mukaanPc);
-        request.addParameter(
-          'deviceConsole',
-          TYPES.TinyInt,
-          model.mukaanKonsoli
-        );
-        request.addParameter(
-          'deviceHanging',
-          TYPES.TinyInt,
-          model.mukaanHengailu
-        );
+        request.addParameter('deviceConsole', TYPES.TinyInt, model.mukaanKonsoli);
+        request.addParameter('deviceHanging', TYPES.TinyInt, model.mukaanHengailu);
         request.addParameter('deviceOther', TYPES.TinyInt, model.mukaanMuuta);
         request.addParameter(
           'deviceOtherComment',
           TYPES.NVarChar,
           model.mukaanMuutaKommentti
         );
-        request.addParameter(
-          'attendingThu',
-          TYPES.TinyInt,
-          model.osallistumisToPe
-        );
-        request.addParameter(
-          'attendingFri',
-          TYPES.TinyInt,
-          model.osallistumisPeLa
-        );
+        request.addParameter('attendingThu', TYPES.TinyInt, model.osallistumisToPe);
+        request.addParameter('attendingFri', TYPES.TinyInt, model.osallistumisPeLa);
         request.addParameter('tournamentBS', TYPES.TinyInt, model.turnausBS);
         request.addParameter('tournamentOW', TYPES.TinyInt, model.turnausOW);
         request.addParameter('tournamentLOL', TYPES.TinyInt, model.turnausLOL);
         request.addParameter('tournamentMC', TYPES.TinyInt, model.turnausMC);
         request.addParameter('tournamentCS', TYPES.TinyInt, model.turnausCS);
-        request.addParameter(
-          'tournamentTetris',
-          TYPES.TinyInt,
-          model.turnausTetris
-        );
-        request.addParameter(
-          'tournamentNerf',
-          TYPES.TinyInt,
-          model.turnausNerf
-        );
-        request.addParameter(
-          'tournamentTableFB',
-          TYPES.TinyInt,
-          model.turnausTableFB
-        );
+        request.addParameter('tournamentTetris', TYPES.TinyInt, model.turnausTetris);
+        request.addParameter('tournamentNerf', TYPES.TinyInt, model.turnausNerf);
+        request.addParameter('tournamentTableFB', TYPES.TinyInt, model.turnausTableFB);
         request.addParameter(
           'tournamentTableTennis',
           TYPES.TinyInt,
           model.turnausTableTennis
         );
-        request.addParameter(
-          'tournamentBiljard',
-          TYPES.TinyInt,
-          model.turnausBiljari
-        );
-        request.addParameter(
-          'tournamentOther',
-          TYPES.TinyInt,
-          model.turnausMuuta
-        );
+        request.addParameter('tournamentBiljard', TYPES.TinyInt, model.turnausBiljari);
+        request.addParameter('tournamentOther', TYPES.TinyInt, model.turnausMuuta);
         request.addParameter(
           'tournamentOtherComment',
           TYPES.NVarChar,
@@ -128,113 +69,83 @@ class RegistrationService {
           TYPES.NVarChar,
           model.ruokaMuuKommentti
         );
+      });
 
-        connection.execSql(request);
+      if (rowCount === 0) {
+        return null;
       }
-    });
-
-    connection.connect();
-    connection.close();
+      return rowCount;
+    })
+      .then(result => callback(result))
+      .catch(err => {
+        console.error(err);
+        callback({ error: 'request error' });
+      });
   }
 
   isRegistered(email, callback) {
-    var connection = azureSqlConnection.connect();
+    withConnection(async connection => {
+      const { rowCount } = await execSql(
+        connection,
+        'SELECT * FROM [Lanregistration] WHERE Email = @email AND History IS NULL',
+        request => {
+          request.addParameter('email', TYPES.NVarChar, email);
+        }
+      );
 
-    connection.on('connect', connErr => {
-      if (connErr) {
-        console.log(connErr);
-      } else {
-        var request = new Request(
-          'SELECT * FROM [Lanregistration] WHERE Email = @email AND History IS NULL',
-          (err, rowCount) => {
-            if (err) {
-              console.log(err);
-            } else {
-              callback({ registered: rowCount > 0 });
-            }
-          }
-        );
-
-        request.addParameter('email', TYPES.NVarChar, email);
-
-        connection.execSql(request);
-      }
-    });
-
-    connection.connect();
-    connection.close();
+      return { registered: rowCount > 0 };
+    })
+      .then(result => callback(result))
+      .catch(err => {
+        console.error(err);
+        callback({ error: 'request error' });
+      });
   }
 
   tournaments(callback) {
-    var connection = azureSqlConnection.connect();
+    withConnection(async connection => {
+      const { rowCount, rows } = await execSql(
+        connection,
+        'SELECT Id, Name, Link FROM [Lantournament] WHERE Enabled = 1'
+      );
 
-    connection.on('connect', connErr => {
-      if (connErr) {
-        console.log(connErr);
-      } else {
-        var request = new Request(
-          'SELECT Id, Name, Link FROM [Lantournament] WHERE Enabled = 1',
-          (err, rowCount, rows) => {
-            if (err) {
-              console.log(err);
-            }
-            console.log('rowcount: ' + rowCount);
-            if (rowCount === 0) {
-              callback([]);
-            } else {
-              callback(
-                rows.map(row => {
-                  return {
-                    [row[0].metadata.colName]: row[0].value,
-                    [row[1].metadata.colName]: row[1].value,
-                    [row[2].metadata.colName]: row[2].value,
-                  };
-                })
-              );
-            }
-          }
-        );
-
-        connection.execSql(request);
+      console.log('rowcount: ' + rowCount);
+      if (rowCount === 0) {
+        return [];
       }
-    });
 
-    connection.connect();
-    connection.close();
+      return rows.map(row => ({
+        [row[0].metadata.colName]: row[0].value,
+        [row[1].metadata.colName]: row[1].value,
+        [row[2].metadata.colName]: row[2].value,
+      }));
+    })
+      .then(result => callback(result))
+      .catch(err => {
+        console.error(err);
+        callback({ error: 'request error' });
+      });
   }
 
   count(callback) {
-    var connection = azureSqlConnection.connect();
+    withConnection(async connection => {
+      const { rowCount, rows } = await execSql(
+        connection,
+        'SELECT COUNT(*) FROM [Lanregistration] WHERE History IS NULL'
+      );
 
-    connection.on('connect', connErr => {
-      if (connErr) {
-        console.log(connErr);
-      } else {
-        var request = new Request(
-          'SELECT COUNT(*) FROM [Lanregistration] WHERE History IS NULL',
-          (err, rowCount, rows) => {
-            if (err) {
-              console.log(err);
-            }
-            console.log('rowcount: ' + rowCount);
-            if (rowCount === 0) {
-              callback([]);
-            } else {
-              callback(
-                rows.map(row => {
-                  return row[0].value;
-                })
-              );
-            }
-          }
-        );
-
-        connection.execSql(request);
+      console.log('rowcount: ' + rowCount);
+      if (rowCount === 0) {
+        return [];
       }
-    });
 
-    connection.connect();
-    connection.close();
+      return rows.map(row => row[0].value);
+    })
+      .then(result => callback(result))
+      .catch(err => {
+        console.error(err);
+        callback({ error: 'request error' });
+      });
   }
 }
 

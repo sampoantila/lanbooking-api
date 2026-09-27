@@ -3,16 +3,22 @@ import feedbackService from '../services/feedbackService.js';
 
 const router = express.Router();
 
-function sendFailure(msg, res) {
-  res.status(400).send({
+function sendFailure(msg, res, status = 400) {
+  res.status(status).send({
     success: 'false',
     message: msg,
   });
 }
 
+function hasError(data) {
+  return data && typeof data === 'object' && data.error != null;
+}
+
 router.post('/', (req, res) => {
   feedbackService.store(req.body, data => {
-    if (data === null) {
+    if (hasError(data)) {
+      sendFailure(data.error, res, 500);
+    } else if (data === null) {
       sendFailure('access denied', res);
     } else {
       res.status(201).json({
