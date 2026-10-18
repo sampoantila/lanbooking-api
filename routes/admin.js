@@ -43,23 +43,47 @@ router.put('/:id/:code', requireAdminCode, (req, res) => {
     return;
   }
 
-  const { arrived, food_paid } = req.body;
-  if (arrived === undefined && food_paid === undefined) {
-    sendFailure('missing arrived or food_paid in body', res);
+  const { arrived, food_paid, staff_food, staff_price } = req.body;
+  if (
+    arrived === undefined &&
+    food_paid === undefined &&
+    staff_food === undefined &&
+    staff_price === undefined
+  ) {
+    sendFailure(
+      'missing arrived, food_paid, staff_food or staff_price in body',
+      res
+    );
     return;
   }
 
-  adminService.updateArrival(id, arrived, food_paid, result => {
-    if (result && result.error) {
-      if (result.error === 'not found') {
-        sendFailure('registration not found', res, 404);
-      } else {
-        sendFailure(result.error, res, 500);
-      }
-    } else {
-      res.json({ success: 'true', message: 'updated' });
+  let staffPrice;
+  if (staff_price !== undefined) {
+    staffPrice = Number(staff_price);
+    if (!Number.isInteger(staffPrice)) {
+      sendFailure('invalid staff_price', res);
+      return;
     }
-  });
+  }
+
+  adminService.updateArrival(
+    id,
+    arrived,
+    food_paid,
+    staff_food,
+    staffPrice,
+    result => {
+      if (result && result.error) {
+        if (result.error === 'not found') {
+          sendFailure('registration not found', res, 404);
+        } else {
+          sendFailure(result.error, res, 500);
+        }
+      } else {
+        res.json({ success: 'true', message: 'updated' });
+      }
+    }
+  );
 });
 
 export default router;

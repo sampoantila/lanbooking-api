@@ -31,27 +31,56 @@ class AdminService {
   }
 
   /**
-   * Päivittää lanregistration-rivin id:llä kentät Arrived ja Food_paid.
+   * Päivittää lanregistration-rivin id:llä ne kentistä Arrived, Food_paid,
+   * staff_food ja staff_price, jotka pyynnössä on annettu.
    */
-  updateArrival(id, arrived, foodPaid, callback) {
+  updateArrival(id, arrived, foodPaid, staffFood, staffPrice, callback) {
+    const assignments = [];
+    if (arrived !== undefined) {
+      assignments.push('[Arrived] = @arrived');
+    }
+    if (foodPaid !== undefined) {
+      assignments.push('[Food_paid] = @food_paid');
+    }
+    if (staffFood !== undefined) {
+      assignments.push('[staff_food] = @staff_food');
+    }
+    if (staffPrice !== undefined) {
+      assignments.push('[staff_price] = @staff_price');
+    }
+
     withConnection(async connection => {
       const { rowCount } = await execSql(
         connection,
         `UPDATE [dbo].[Lanregistration]
-         SET [Arrived] = @arrived, [Food_paid] = @food_paid
+         SET ${assignments.join(', ')}
          WHERE [Id] = @id`,
         request => {
           request.addParameter('id', TYPES.Int, id);
-          request.addParameter(
-            'arrived',
-            TYPES.Int,
-            arrived === true || arrived === 1
-          );
-          request.addParameter(
-            'food_paid',
-            TYPES.Int,
-            foodPaid === true || foodPaid === 1
-          );
+          if (arrived !== undefined) {
+            request.addParameter(
+              'arrived',
+              TYPES.Int,
+              arrived === true || arrived === 1
+            );
+          }
+          if (foodPaid !== undefined) {
+            request.addParameter(
+              'food_paid',
+              TYPES.Int,
+              foodPaid === true || foodPaid === 1
+            );
+          }
+          if (staffFood !== undefined) {
+            request.addParameter(
+              'staff_food',
+              TYPES.Int,
+              staffFood === true || staffFood === 1
+            );
+          }
+          if (staffPrice !== undefined) {
+            request.addParameter('staff_price', TYPES.Int, staffPrice);
+          }
         }
       );
 
