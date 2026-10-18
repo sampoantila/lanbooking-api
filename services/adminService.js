@@ -102,6 +102,40 @@ class AdminService {
         callback({ error: 'update error' });
       });
   }
+
+  /**
+   * Arkistoi kaikki ilmoittautumiset ja nollaa kaikki varaukset.
+   * Lanregistration.History = 1.
+   * Lanbooking: Code = '*****', Location = null, InvitationSent = 0.
+   */
+  resetBookingsAndRegistrations(callback) {
+    const query = `BEGIN TRY
+      BEGIN TRANSACTION;
+      UPDATE [dbo].[Lanregistration] SET [History] = 1;
+      UPDATE [dbo].[Lanbooking]
+        SET [Code] = @code,
+            [Location] = NULL,
+            [InvitationSent] = 0;
+      COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+      IF @@TRANCOUNT > 0
+        ROLLBACK TRANSACTION;
+      THROW;
+    END CATCH`;
+
+    withConnection(async connection => {
+      await execSql(connection, query, request => {
+        request.addParameter('code', TYPES.NVarChar, '*****');
+      });
+      return { success: true };
+    })
+      .then(result => callback(result))
+      .catch(err => {
+        console.error(err);
+        callback({ error: 'reset error' });
+      });
+  }
 }
 
 export default new AdminService();

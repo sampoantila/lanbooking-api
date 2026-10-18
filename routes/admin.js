@@ -24,6 +24,16 @@ function requireAdminCode(req, res, next) {
   next();
 }
 
+router.post('/reset/:code', requireAdminCode, (req, res) => {
+  adminService.resetBookingsAndRegistrations(result => {
+    if (result && result.error) {
+      sendFailure(result.error, res, 500);
+    } else {
+      res.json({ success: 'true', message: 'reset' });
+    }
+  });
+});
+
 router.get('/:code', requireAdminCode, (req, res) => {
   adminService.getRegistrationsWithLocation(data => {
     if (hasError(data)) {
